@@ -68,5 +68,130 @@ function calculate(){
  r.textContent=(english?'Estimated monthly installment: ':'القسط الشهري المتوقع: ')+money(monthly)+' EGP. '+(b>0?(monthly<=b?(english?'Within your budget.':'مناسب لميزانيتك.'):(english?'Above your budget.':'أعلى من ميزانيتك.')):'');
 }
 </script>
+
+<section class="card" id="lead-section" style="margin:24px auto;max-width:480px">
+  <h2>اطلب استشارة عقارية | Request a Consultation</h2>
+  <p>سيب بياناتك وفريق Rock Vine هيتواصل معاك.</p>
+
+  <form id="leadForm">
+    <label>الاسم بالكامل | Full Name</label>
+    <input name="full_name" required maxlength="100">
+
+    <label>رقم الموبايل | Phone</label>
+    <input name="phone" type="tel" required maxlength="20">
+
+    <label>المنطقة المطلوبة | Preferred Area</label>
+    <input name="preferred_area" required maxlength="100">
+
+    <label>الميزانية بالجنيه | Budget (EGP)</label>
+    <input name="budget" type="number" min="1" required>
+
+    <label>المقدم | Down Payment</label>
+    <input name="down_payment" type="number" min="0">
+
+    <label>القسط الشهري | Monthly Installment</label>
+    <input name="monthly_installment" type="number" min="0">
+
+    <label>الغرض من الشراء | Purpose</label>
+    <select name="purchase_purpose" required>
+      <option value="">اختر | Select</option>
+      <option value="living">سكن | Living</option>
+      <option value="investment">استثمار | Investment</option>
+    </select>
+
+    <label>حالة العقار | Property Status</label>
+    <select name="property_status" required>
+      <option value="">اختر | Select</option>
+      <option value="ready">جاهز | Ready</option>
+      <option value="off_plan">تحت الإنشاء | Off-plan</option>
+      <option value="either">الاتنين | Either</option>
+    </select>
+
+    <label>ميعاد الشراء | Purchase Timeline</label>
+    <select name="purchase_timeline" required>
+      <option value="">اختر | Select</option>
+      <option value="immediate">فورًا | Immediately</option>
+      <option value="1-3_months">خلال 1–3 شهور</option>
+      <option value="3-6_months">خلال 3–6 شهور</option>
+      <option value="exploring">بستكشف الخيارات</option>
+    </select>
+
+    <label style="display:flex;align-items:flex-start;gap:10px">
+      <input type="checkbox" name="contact_consent"
+        required style="width:auto;margin-top:4px">
+      <span>أوافق على استخدام بياناتي بواسطة Rock Vine Real Estate للتواصل معي بخصوص طلبي العقاري.
+      I agree to be contacted by Rock Vine Real Estate about my property inquiry.</span>
+    </label>
+
+    <div id="rvx-turnstile"></div>
+    <button type="submit" id="leadSubmit">إرسال الطلب | Submit</button>
+    <p id="leadMessage" role="status"></p>
+  </form>
+</section>
+<script src="https://challenges.cloudflare.com/turnstile
+    <script>
+let rvxTurnstileId = null;
+
+function initRvxTurnstile() {
+  if (!window.turnstile) {
+    setTimeout(initRvxTurnstile, 200);
+    return;
+  }
+
+  rvxTurnstileId = turnstile.render("#rvx-turnstile", {
+    sitekey: "0x4AAAAAAFnGLp4b4bQ29xoU"
+  });
+}
+
+initRvxTurnstile();
+</script>
+<script>
+const leadForm = document.getElementById("rvxLeadForm");
+
+if (leadForm) {
+  leadForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const message = document.getElementById("leadMessage");
+    const button = document.getElementById("leadSubmit");
+    const data = Object.fromEntries(new FormData(leadForm));
+
+    if (!leadForm.reportValidity()) return;
+
+    data.contact_consent = leadForm.elements["contact_consent"].checked;
+    data.turnstile_token = window.turnstile?.getResponse(rvxTurnstileId) || "";
+
+    if (!data.turnstile_token) {
+      message.textContent = "من فضلك أكمل التحقق الأمني.";
+      return;
+    }
+
+    button.disabled = true;
+    message.textContent = "جاري إرسال طلبك...";
+
+    try {
+      const response = await fetch(
+        "https://awsqnaxbccyqqwmtxxj.supabase.co/functions/v1/submit-rvx-lead",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        }
+      );
+
+      if (!response.ok) throw new Error("Submission failed");
+
+      message.textContent = "تم استلام طلبك بنجاح.";
+      leadForm.reset();
+      window.turnstile?.reset(rvxTurnstileId);
+    } catch (error) {
+      message.textContent = "تعذر إرسال الطلب. حاول مرة أخرى.";
+      window.turnstile?.reset(rvxTurnstileId);
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+</script>
 </body>
 </html>
