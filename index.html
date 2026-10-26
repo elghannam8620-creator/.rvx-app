@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RVX | Rock Vine</title>
+<style>
+body{margin:0;background:#102b29;color:white;font-family:Arial,sans-serif}
+header{padding:25px;text-align:center;background:#09201e}
+h1{color:#d9b779;font-size:48px;margin:5px}
+main{max-width:480px;margin:auto;padding:20px}
+.card{background:#193a37;padding:20px;border-radius:16px;margin:15px 0}
+input,select,button{box-sizing:border-box;width:100%;padding:14px;margin:8px 0;border:0;border-radius:9px;font-size:16px}
+button{background:#d9b779;color:#102b29;font-weight:bold;cursor:pointer}
+label{display:block;margin-top:10px}
+#result{line-height:2}
+small{color:#ccd8d5}
+</style>
+</head>
+<body>
+<header>
+<h1>RVX</h1>
+<div>by ROCK VINE</div>
+<p>Smarter Real Estate Decisions</p>
+</header>
+<main>
+<button onclick="lang()">عربي / English</button>
+<div class="card">
+<h2 id="heading">احسب صفقتك العقارية</h2>
+<label id="l1">سعر العقار</label>
+<input id="price" type="number" placeholder="10000000">
+<label id="l2">المقدم</label>
+<input id="down" type="number" placeholder="1000000">
+<label id="l3">عدد سنوات التقسيط</label>
+<input id="years" type="number" placeholder="8">
+<label id="l4">القسط الشهري المناسب لك</label>
+<input id="budget" type="number" placeholder="100000">
+<button id="calc" onclick="calculate()">تحليل الصفقة</button>
+</div>
+<div class="card" id="result"></div>
+<small id="note">الحساب تقديري ولا يشمل الصيانة والرسوم الإضافية.</small>
+</main>
+<script>
+let english=false;
+function lang(){
+ english=!english;
+ document.documentElement.lang=english?'en':'ar';
+ document.documentElement.dir=english?'ltr':'rtl';
+ const t=english?
+ ['Analyze your property deal','Property price','Down payment','Installment years','Your monthly budget','Analyze deal','Estimate excludes maintenance and extra fees.']:
+ ['احسب صفقتك العقارية','سعر العقار','المقدم','عدد سنوات التقسيط','القسط الشهري المناسب لك','تحليل الصفقة','الحساب تقديري ولا يشمل الصيانة والرسوم الإضافية.'];
+ ['heading','l1','l2','l3','l4','calc','note'].forEach((id,i)=>document.getElementById(id).textContent=t[i]);
+ document.getElementById('result').textContent='';
+}
+function calculate(){
+ const p=Number(document.getElementById('price').value);
+ const d=Number(document.getElementById('down').value);
+ const y=Number(document.getElementById('years').value);
+ const b=Number(document.getElementById('budget').value);
+ const r=document.getElementById('result');
+ if(!p||!y||d<0||d>=p||y>30){
+ r.textContent=english?'Please check the price, down payment and years.':'راجع السعر والمقدم وعدد السنوات.';
+ return;
+ }
+ const monthly=(p-d)/(y*12);
+ const money=n=>n.toLocaleString(english?'en-US':'ar-EG',{maximumFractionDigits:0});
+ r.textContent=(english?'Estimated monthly installment: ':'القسط الشهري المتوقع: ')+money(monthly)+' EGP. '+(b>0?(monthly<=b?(english?'Within your budget.':'مناسب لميزانيتك.'):(english?'Above your budget.':'أعلى من ميزانيتك.')):'');
+}
+</script>
+</body>
+</html>
